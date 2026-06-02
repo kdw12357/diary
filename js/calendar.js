@@ -1,10 +1,12 @@
 /* ──────────────────────────────────────
-   calendar.js  —  달력 탭
+   calendar.js  —  달력 탭 + 공휴일 표시
 ────────────────────────────────────── */
 
 const Calendar = {
   year: 0,
   month: 0,
+  /* 공휴일 캐시: { 'YYYY-M': { 'YYYYMMDD': '공휴일명' } } */
+  _holidayCache: {},
 
   init() {
     const now = new Date();
@@ -68,14 +70,12 @@ const Calendar = {
     const nbs     = Storage.getNotebooks();
     const entries = Storage.getEntriesInMonth(this.year, this.month);
 
-    /* 날짜별 entry 그룹화 */
     const byDate = {};
     entries.forEach(e => {
       (byDate[e.date] = byDate[e.date] || []).push(e);
     });
 
-    /* 월 첫 요일, 일수 */
-    const firstDow   = new Date(this.year, this.month - 1, 1).getDay();
+    const firstDow    = new Date(this.year, this.month - 1, 1).getDay();
     const daysInMonth = new Date(this.year, this.month, 0).getDate();
     const daysInPrev  = new Date(this.year, this.month - 1, 0).getDate();
 
@@ -86,7 +86,6 @@ const Calendar = {
 
     grid.innerHTML = '';
 
-    /* 항상 6행 × 7열 = 42셀 */
     for (let i = 0; i < 42; i++) {
       const cell = document.createElement('div');
       cell.className = 'cal-cell';
@@ -113,6 +112,9 @@ const Calendar = {
       if (dow === 0) cell.classList.add('sun-col');
       if (dow === 6) cell.classList.add('sat-col');
       if (dateStr === today) cell.classList.add('today');
+
+      /* 공휴일 적용을 위해 data-date 저장 */
+      cell.dataset.date = dateStr;
 
       /* 날짜 숫자 */
       const num = document.createElement('div');
@@ -147,7 +149,6 @@ const Calendar = {
         cell.appendChild(dotsWrap);
       }
 
-      /* 클릭 핸들러 — 현재 달 셀 또는 entry 있는 다른 달 셀 */
       if (isCur || cellEntries.length > 0) {
         cell.style.cursor = 'pointer';
         cell.addEventListener('click', e => {
@@ -158,19 +159,65 @@ const Calendar = {
 
       grid.appendChild(cell);
     }
+
+    /* 공휴일 비동기 적용 (달력 렌더 후 별도 업데이트) */
+    this._fetchHolidays(this.year, this.month);
+  },
+
+  /* ── 공휴일 fetch ── */
+  _fetchHolidays(year, month) {
+    const key = `${year}-${month}`;
+    if (this._holidayCache[key]) {
+      this._applyHolidays(this._holidayCache[key]);
+      return;
+    }
+    fetch(`https://reading-proxy.kdw12357.workers.dev/holidays?year=${year}&month=${month}`)
+      .then(r => {
+        if (!r.ok) throw new Error('fetch failed');
+        return r.json();
+      })
+      .then(data => {
+        const map = {};
+        (data.holidays || []).forEach(h => {
+          if (h.isHoliday) map[h.date] = h.name;
+        });
+        this._holidayCache[key] = map;
+        /* 렌더된 달과 여전히 같은 달인지 확인 후 적용 */
+        if (this.year === year && this.month === month) {
+          this._applyHolidays(map);
+        }
+      })
+      .catch(() => { /* 조용히 무시 */ });
+  },
+
+  _applyHolidays(map) {
+    Object.entries(map).forEach(([date8, name]) => {
+      /* 'YYYYMMDD' → 'YYYY-MM-DD' */
+      const dateStr = `${date8.slice(0,4)}-${date8.slice(4,6)}-${date8.slice(6,8)}`;
+      const cell = document.querySelector(`.cal-cell[data-date="${dateStr}"]`);
+      if (!cell) return;
+      cell.classList.add('holiday');
+
+      /* 공휴일 이름 span (중복 방지) */
+      if (!cell.querySelector('.cal-holiday-name')) {
+        const nameEl = document.createElement('div');
+        nameEl.className = 'cal-holiday-name';
+        nameEl.textContent = name;
+        cell.appendChild(nameEl);
+      }
+    });
   },
 
   /* ── 셀 클릭 → 팝업 ── */
   _onCellClick(dateStr, cellEntries, cellEl) {
-    const popup      = document.getElementById('date-popup');
-    const labelEl    = document.getElementById('date-popup-label');
-    const bodyEl     = document.getElementById('date-popup-body');
-    const nbs        = Storage.getNotebooks();
+    const popup   = document.getElementById('date-popup');
+    const labelEl = document.getElementById('date-popup-label');
+    const bodyEl  = document.getElementById('date-popup-body');
+    const nbs     = Storage.getNotebooks();
 
     labelEl.textContent = formatDateKo(dateStr);
     bodyEl.innerHTML = '';
 
-    /* 기존 entry 카드 */
     cellEntries.forEach(entry => {
       const nb      = nbs.find(n => n.id === entry.notebookId);
       const preview = entry.content.find(b => b.type === 'text')?.value || '';
@@ -179,9 +226,9 @@ const Calendar = {
       const card = document.createElement('div');
       card.className = 'popup-entry-card';
       card.innerHTML = `
-        <span class="popup-entry-dot" style="background:${nb?.color || '#ccc'}"></span>
+        <span class="popup-entry-dot" style="background:${nb?.color || '#aaa'}"></span>
         <div class="popup-entry-info">
-          <div class="popup-entry-nb">${nb?.name || '알 수 없음'}</div>
+          <div class="popup-entry-nb">${nb?.name || '미분류'}</div>
           <div class="popup-entry-preview">${
             preview.slice(0, 38) || (hasImg ? '📷 사진' : '(내용 없음)')
           }</div>
@@ -195,7 +242,6 @@ const Calendar = {
       bodyEl.appendChild(card);
     });
 
-    /* 쓰기 버튼 */
     const writeBtn = document.createElement('button');
     writeBtn.className = 'popup-write-btn';
     writeBtn.textContent = cellEntries.length > 0 ? '+ 이 날 일기 추가' : '✏️ 일기 쓰기';
@@ -206,26 +252,21 @@ const Calendar = {
     });
     bodyEl.appendChild(writeBtn);
 
-    /* 팝업 위치 계산 (데스크톱) */
     const rect = cellEl.getBoundingClientRect();
     popup.hidden = false;
 
-    /* 모바일에서는 CSS로 바텀시트 처리됨 — 데스크톱만 위치 설정 */
     if (window.innerWidth > 520) {
       const pw = 270;
       let left = rect.left + window.scrollX;
       let top  = rect.bottom + window.scrollY + 5;
 
-      /* 화면 바깥으로 나가면 보정 */
       if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
       if (left < 8) left = 8;
 
-      /* 아래 공간 없으면 위로 */
-      popup.style.left = left + 'px';
-      popup.style.top  = top  + 'px';
+      popup.style.left   = left + 'px';
+      popup.style.top    = top  + 'px';
       popup.style.bottom = '';
 
-      /* 렌더 후 높이 재계산 */
       requestAnimationFrame(() => {
         const ph = popup.offsetHeight;
         if (rect.bottom + ph + 5 > window.innerHeight) {

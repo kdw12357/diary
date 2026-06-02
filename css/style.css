@@ -644,6 +644,14 @@ body {
 ══════════════════════════════════════ */
 .editor-modal-box { max-width: 600px; }
 
+@media (min-width: 768px) {
+  .editor-modal-box {
+    max-width: min(900px, 80vw);
+    max-height: min(800px, 85vh);
+    max-height: min(800px, 85dvh);
+  }
+}
+
 .editor-meta {
   display: flex;
   gap: 16px;
@@ -742,7 +750,28 @@ body {
 .block-img-wrap img {
   max-width: 100%;
   border-radius: var(--radius-sm);
+  display: block;
 }
+
+/* 이미지 [소/중/대] 버튼 */
+.img-size-btns {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.img-size-btn {
+  background: var(--bg);
+  border: 1.5px solid var(--line-light);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-family: var(--font-b);
+  font-size: 0.75rem;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.14s;
+}
+.img-size-btn:hover { background: var(--accent-lt); border-color: var(--line); }
+.img-size-btn.active { background: var(--line); color: #fff; border-color: var(--line); }
 
 .block-processing {
   display: flex;
@@ -804,11 +833,30 @@ body {
   flex-direction: column;
   gap: 7px;
   box-shadow: 2px 3px 0 var(--line-light);
+  position: relative;
 }
 .notebook-card:hover {
   transform: translateY(-2px);
   box-shadow: 3px 6px 0 var(--line);
 }
+
+.nb-card-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 0.82rem;
+  opacity: 0.3;
+  transition: opacity 0.15s, background 0.15s;
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1;
+}
+.nb-card-delete-btn:hover { opacity: 1; background: #FFCDD2; }
+.notebook-card:hover .nb-card-delete-btn { opacity: 0.55; }
+
+.unclassified-card { border-style: dashed; }
 
 .nb-card-color-bar {
   width: 44px;
@@ -853,16 +901,35 @@ body {
 /* 일기 목록 */
 .entries-header {
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.entries-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.entries-title-row {
+  display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 18px;
+  padding: 4px 0;
+}
+
+.entries-nb-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .entries-title {
   font-family: var(--font-h);
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   color: var(--text-1);
-  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1025,4 +1092,66 @@ body {
     max-height: 95dvh;
     border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-sm);
   }
+}
+
+/* ══════════════════════════════════════
+   연/월 그룹 헤더 (일기장 내 리스트)
+══════════════════════════════════════ */
+details { margin-bottom: 2px; }
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+
+.entry-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-h);
+  color: var(--text-2);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.14s;
+}
+.entry-group-header:hover { background: var(--accent-lt); }
+.entry-group-header::before {
+  content: '▶';
+  font-size: 0.6rem;
+  color: var(--text-3);
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+details[open] > .entry-group-header::before { transform: rotate(90deg); }
+
+.year-header {
+  font-size: 1rem;
+  color: var(--text-1);
+  border-bottom: 1px solid var(--line-faint);
+  border-radius: 0;
+  margin-top: 8px;
+  margin-bottom: 2px;
+}
+.year-header:first-child { margin-top: 0; }
+
+.month-header {
+  font-size: 0.9rem;
+  padding-left: 20px;
+}
+
+.entry-month-group { padding-left: 6px; }
+
+/* ══════════════════════════════════════
+   달력 공휴일
+══════════════════════════════════════ */
+.cal-cell.holiday .cal-day-num { color: #D46060; }
+.cal-cell.holiday.today .cal-day-num { color: #fff; }
+
+.cal-holiday-name {
+  font-size: clamp(0.42rem, 0.75vw, 0.55rem);
+  color: #D46060;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  margin-top: 1px;
 }

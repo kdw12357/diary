@@ -17,9 +17,9 @@ const EntryModal = {
 
     /* 배지 */
     const badge = document.getElementById('modal-nb-badge');
-    badge.textContent = nb?.name || '알 수 없음';
-    badge.style.background = nb?.color || '#E8D8C0';
-    badge.style.setProperty('--nb-dot-color', nb?.color || '#ccc');
+    badge.textContent = nb?.name || '미분류';
+    badge.style.background = nb?.color || '#E0E0E0';
+    badge.style.setProperty('--nb-dot-color', nb?.color || '#aaa');
 
     document.getElementById('modal-entry-date').textContent = formatDateKo(entry.date);
 
@@ -38,6 +38,8 @@ const EntryModal = {
         const img = document.createElement('img');
         img.src = block.value;
         img.loading = 'lazy';
+        const sizeMap = { small: '33%', medium: '66%', large: '100%' };
+        img.style.width = sizeMap[block.size || 'medium'];
         div.appendChild(img);
       }
       wrap.appendChild(div);

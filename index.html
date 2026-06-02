@@ -77,9 +77,14 @@
       <!-- 일기장별 일기 목록 -->
       <div id="notebook-entries-view" class="hidden">
         <div class="entries-header">
-          <button class="btn-back" id="btn-back-notebooks">← 뒤로</button>
-          <h2 class="entries-title" id="entries-nb-title"></h2>
-          <button class="btn-write-sm" id="btn-write-in-nb">+ 쓰기</button>
+          <div class="entries-nav-row">
+            <button class="btn-back" id="btn-back-notebooks">← 뒤로</button>
+            <button class="btn-write-sm" id="btn-write-in-nb">+ 쓰기</button>
+          </div>
+          <div class="entries-title-row">
+            <span class="entries-nb-dot" id="entries-nb-dot"></span>
+            <h2 class="entries-title" id="entries-nb-title"></h2>
+          </div>
         </div>
         <div class="entries-list" id="entries-list"></div>
       </div>

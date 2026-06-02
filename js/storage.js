@@ -24,12 +24,11 @@ function formatDateKo(dateStr) {
   return `${y}년 ${parseInt(m)}월 ${parseInt(d)}일`;
 }
 
-/* ── Notebooks ── */
 const NB_KEY = 'diary_notebooks';
 const EN_KEY = 'diary_entries';
 
 const Storage = {
-  /* Notebooks */
+  /* ── Notebooks ── */
   getNotebooks() {
     return JSON.parse(localStorage.getItem(NB_KEY) || '[]');
   },
@@ -45,7 +44,11 @@ const Storage = {
   },
   deleteNotebook(id) {
     this._saveNotebooks(this.getNotebooks().filter(n => n.id !== id));
-    this._saveEntries(this.getEntries().filter(e => e.notebookId !== id));
+    /* 해당 일기장의 entries는 삭제하지 않고 미분류(null)로 변경 */
+    const updated = this.getEntries().map(e =>
+      e.notebookId === id ? { ...e, notebookId: null } : e
+    );
+    this._saveEntries(updated);
   },
   getNotebookById(id) {
     return this.getNotebooks().find(n => n.id === id) || null;
@@ -55,7 +58,7 @@ const Storage = {
     return PALETTE.find(c => !used.includes(c)) || PALETTE[0];
   },
 
-  /* Entries */
+  /* ── Entries ── */
   getEntries() {
     return JSON.parse(localStorage.getItem(EN_KEY) || '[]');
   },
@@ -65,7 +68,8 @@ const Storage = {
   addEntry(notebookId, date, content) {
     const list = this.getEntries();
     const now = new Date().toISOString();
-    const entry = { id: genId(), notebookId, date, content, createdAt: now, updatedAt: now };
+    /* notebookId가 null이면 미분류로 저장 */
+    const entry = { id: genId(), notebookId: notebookId || null, date, content, createdAt: now, updatedAt: now };
     list.push(entry);
     this._saveEntries(list);
     return entry;
@@ -87,17 +91,21 @@ const Storage = {
   getEntriesByDate(date) {
     return this.getEntries().filter(e => e.date === date);
   },
+  /* nbId === null 이면 미분류 조회 */
   getEntriesByNotebook(nbId) {
     return this.getEntries()
-      .filter(e => e.notebookId === nbId)
+      .filter(e => nbId === null ? e.notebookId === null : e.notebookId === nbId)
       .sort((a, b) => b.date.localeCompare(a.date));
   },
   getEntriesInMonth(year, month) {
     const prefix = `${year}-${String(month).padStart(2, '0')}`;
     return this.getEntries().filter(e => e.date.startsWith(prefix));
   },
+  hasUnclassified() {
+    return this.getEntries().some(e => e.notebookId === null);
+  },
 
-  /* Export / Import */
+  /* ── Export / Import ── */
   exportAll() {
     return {
       version: 1,

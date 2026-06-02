@@ -2,6 +2,9 @@
    editor.js  —  블록 에디터 + 이미지 압축
 ────────────────────────────────────── */
 
+const IMG_SIZE_MAP = { small: '33%', medium: '66%', large: '100%' };
+const IMG_SIZE_LABEL = { small: '소', medium: '중', large: '대' };
+
 const Editor = {
   blocks: [],
   editingId: null,
@@ -20,7 +23,6 @@ const Editor = {
         document.getElementById('editor-modal-title').textContent = '일기 수정';
       }
     } else {
-      // 빈 텍스트 블록 하나
       this.blocks = [{ type: 'text', value: '' }];
       document.getElementById('editor-date').value = opts.date || getTodayStr();
       this._fillNotebookSelect(opts.notebookId || null);
@@ -29,7 +31,6 @@ const Editor = {
 
     document.getElementById('editor-modal').hidden = false;
     this._render();
-    // 첫 텍스트 블록에 포커스
     setTimeout(() => {
       const first = document.querySelector('#editor-blocks .block-textarea');
       if (first) first.focus();
@@ -42,18 +43,19 @@ const Editor = {
     this.editingId = null;
   },
 
-  /* ── 일기장 선택 드롭다운 채우기 ── */
+  /* ── 일기장 드롭다운 ── */
   _fillNotebookSelect(selectedId) {
     const sel = document.getElementById('editor-nb-select');
     sel.innerHTML = '';
     const nbs = Storage.getNotebooks();
-    if (nbs.length === 0) {
-      const opt = document.createElement('option');
-      opt.value = '';
-      opt.textContent = '— 일기장 없음 (먼저 만들어 주세요) —';
-      sel.appendChild(opt);
-      return;
-    }
+
+    /* 미분류 옵션 (항상 첫 번째) */
+    const unOpt = document.createElement('option');
+    unOpt.value = '';
+    unOpt.textContent = '— 미분류 —';
+    if (!selectedId) unOpt.selected = true;
+    sel.appendChild(unOpt);
+
     nbs.forEach(nb => {
       const opt = document.createElement('option');
       opt.value = nb.id;
@@ -82,7 +84,6 @@ const Editor = {
       `;
       item.appendChild(ctrl);
 
-      /* 내용 */
       const content = document.createElement('div');
       content.className = 'block-content';
 
@@ -97,16 +98,32 @@ const Editor = {
           this._autoResize(e.target);
         });
         content.appendChild(ta);
-        // 높이 조절
         setTimeout(() => this._autoResize(ta), 0);
 
       } else if (block.type === 'image') {
         const wrap = document.createElement('div');
         wrap.className = 'block-img-wrap';
+
         if (block.value) {
+          const currentSize = block.size || 'medium';
           const img = document.createElement('img');
           img.src = block.value;
+          img.style.width = IMG_SIZE_MAP[currentSize];
           wrap.appendChild(img);
+
+          /* [소] [중] [대] 버튼 */
+          const sizeBtns = document.createElement('div');
+          sizeBtns.className = 'img-size-btns';
+          Object.keys(IMG_SIZE_MAP).forEach(s => {
+            const btn = document.createElement('button');
+            btn.className = 'img-size-btn' + (s === currentSize ? ' active' : '');
+            btn.textContent = IMG_SIZE_LABEL[s];
+            btn.dataset.action = 'size';
+            btn.dataset.idx = String(idx);
+            btn.dataset.size = s;
+            sizeBtns.appendChild(btn);
+          });
+          wrap.appendChild(sizeBtns);
         } else {
           const proc = document.createElement('div');
           proc.className = 'block-processing';
@@ -129,6 +146,7 @@ const Editor = {
       if (action === 'up')   this._move(idx, -1);
       if (action === 'down') this._move(idx,  1);
       if (action === 'del')  this._delete(idx);
+      if (action === 'size') this._setImageSize(idx, btn.dataset.size);
     };
   },
 
@@ -149,7 +167,12 @@ const Editor = {
     this._render();
   },
 
-  /* ── 텍스트 블록 추가 ── */
+  _setImageSize(idx, size) {
+    this.blocks[idx].size = size;
+    this._render();
+  },
+
+  /* ── 블록 추가 ── */
   addText() {
     this.blocks.push({ type: 'text', value: '' });
     this._render();
@@ -159,10 +182,9 @@ const Editor = {
     }, 60);
   },
 
-  /* ── 이미지 블록 추가 ── */
   addImage(file) {
     const idx = this.blocks.length;
-    this.blocks.push({ type: 'image', value: null });
+    this.blocks.push({ type: 'image', value: null, size: 'medium' });
     this._render();
     this._compress(file).then(dataUrl => {
       this.blocks[idx].value = dataUrl;
@@ -198,17 +220,15 @@ const Editor = {
   /* ── 저장 ── */
   save() {
     const date = document.getElementById('editor-date').value;
-    const nbId = document.getElementById('editor-nb-select').value;
+    const nbId = document.getElementById('editor-nb-select').value || null;
 
     if (!date) { alert('날짜를 선택해 주세요.'); return false; }
-    if (!nbId) { alert('일기장을 선택해 주세요.\n먼저 일기장 탭에서 일기장을 만들어 주세요.'); return false; }
 
-    /* 처리 중인 이미지가 있으면 대기 */
     if (this.blocks.some(b => b.type === 'image' && b.value === null)) {
       alert('사진을 처리 중입니다. 잠시 후 다시 시도해 주세요.'); return false;
     }
 
-    const content = this.blocks.filter(b => b.value !== '' || b.type === 'image');
+    const content = this.blocks.filter(b => b.type === 'image' || b.value !== '');
 
     if (this.editingId) {
       Storage.updateEntry(this.editingId, { date, notebookId: nbId, content });
