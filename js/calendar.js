@@ -199,12 +199,17 @@ const Calendar = {
       if (!cell) return;
       cell.classList.add('holiday');
 
-      /* 공휴일 이름 span (중복 방지) */
+      /* 공휴일 이름 span (중복 방지, 일기 점보다 위에 표시) */
       if (!cell.querySelector('.cal-holiday-name')) {
         const nameEl = document.createElement('div');
         nameEl.className = 'cal-holiday-name';
         nameEl.textContent = name;
-        cell.appendChild(nameEl);
+        const dotsWrap = cell.querySelector('.cal-dots');
+        if (dotsWrap) {
+          cell.insertBefore(nameEl, dotsWrap);
+        } else {
+          cell.appendChild(nameEl);
+        }
       }
     });
   },
