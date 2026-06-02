@@ -1,10 +1,11 @@
-const CACHE_NAME = 'diary-v6';
+const CACHE_NAME = 'diary-v7';
 
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
   './js/storage.js',
+  './js/sync.js',
   './js/editor.js',
   './js/calendar.js',
   './js/notebooks.js',

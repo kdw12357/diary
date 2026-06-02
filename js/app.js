@@ -70,6 +70,27 @@ const EntryModal = {
 };
 
 /* ══════════════════════
+   비밀 키 모달
+══════════════════════ */
+const SecretModal = {
+  open() {
+    document.getElementById('secret-input').value = Sync.getSecret();
+    document.getElementById('secret-modal').hidden = false;
+    setTimeout(() => document.getElementById('secret-input').focus(), 80);
+  },
+  close() {
+    document.getElementById('secret-modal').hidden = true;
+  },
+  save() {
+    const key = document.getElementById('secret-input').value.trim();
+    Sync.setSecret(key);
+    this.close();
+    if (key) Sync.pull();
+    else     Sync._status('no-key');
+  },
+};
+
+/* ══════════════════════
    확인 다이얼로그
 ══════════════════════ */
 const Confirm = {
@@ -127,6 +148,14 @@ const App = {
       if (f) this.importJSON(f);
       e.target.value = '';
     });
+    document.getElementById('menu-sync').addEventListener('click', () => {
+      dropdown.hidden = true;
+      Sync.pull();
+    });
+    document.getElementById('menu-secret').addEventListener('click', () => {
+      dropdown.hidden = true;
+      SecretModal.open();
+    });
 
     /* 날짜 팝업 닫기 */
     document.getElementById('date-popup-close').addEventListener('click', () => {
@@ -169,10 +198,22 @@ const App = {
       if (e.target === document.getElementById('confirm-modal')) Confirm.close();
     });
 
+    /* 비밀 키 모달 */
+    document.getElementById('secret-modal-close').addEventListener('click',  () => SecretModal.close());
+    document.getElementById('secret-modal-cancel').addEventListener('click', () => SecretModal.close());
+    document.getElementById('secret-modal-save').addEventListener('click',   () => SecretModal.save());
+    document.getElementById('secret-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') SecretModal.save();
+    });
+    document.getElementById('secret-modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('secret-modal')) SecretModal.close();
+    });
+
     /* ESC 키로 최상단 모달 닫기 */
     document.addEventListener('keydown', e => {
       if (e.key !== 'Escape') return;
       if (!document.getElementById('confirm-modal').hidden)  { Confirm.close(); return; }
+      if (!document.getElementById('secret-modal').hidden)   { SecretModal.close(); return; }
       if (!document.getElementById('editor-modal').hidden)   { Editor.close(); return; }
       if (!document.getElementById('entry-modal').hidden)    { EntryModal.close(); return; }
       if (!document.getElementById('nb-modal').hidden)       { Notebooks._closeModal(); return; }
@@ -187,6 +228,9 @@ const App = {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js').catch(() => {});
     }
+
+    /* 동기화 초기화 (캐시 우선 → 백그라운드 pull) */
+    Sync.init();
   },
 
   switchTab(tab) {
@@ -203,10 +247,12 @@ const App = {
   refresh() {
     Calendar.render();
     Notebooks.refresh();
+    Sync.push();
   },
 
   refreshCalendar() {
     Calendar.render();
+    Sync.push();
   },
 
   /* ── JSON 내보내기 ── */

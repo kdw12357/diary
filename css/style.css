@@ -1164,3 +1164,81 @@ details[open] > .entry-group-header::before { transform: rotate(90deg); }
   line-height: 1.2;
   margin-top: 1px;
 }
+
+/* ══════════════════════════════════════
+   동기화 인디케이터
+══════════════════════════════════════ */
+.sync-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ccc;
+  flex-shrink: 0;
+  transition: background 0.3s;
+  align-self: center;
+}
+.sync-indicator.syncing {
+  background: #E8B84B;
+  animation: sync-pulse 1s ease-in-out infinite;
+}
+.sync-indicator.success { background: #6AAE6A; }
+.sync-indicator.error   { background: #E07070; }
+.sync-indicator.offline { background: #B0B0B0; }
+.sync-indicator.no-key  { background: #E8B84B; }
+
+@keyframes sync-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* ══════════════════════════════════════
+   토스트
+══════════════════════════════════════ */
+.toast-container {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  width: min(320px, 90vw);
+}
+
+.toast {
+  background: var(--text-1);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 22px;
+  font-family: var(--font-b);
+  font-size: 0.84rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.25s, transform 0.25s;
+  text-align: center;
+  word-break: keep-all;
+}
+.toast.visible        { opacity: 1; transform: translateY(0); }
+.toast.toast-error    { background: #C62828; }
+.toast.toast-success  { background: #2E7D32; }
+
+/* ══════════════════════════════════════
+   비밀 키 모달
+══════════════════════════════════════ */
+.secret-modal-box { max-width: 360px; }
+
+.secret-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.secret-modal-desc {
+  font-size: 0.9rem;
+  color: var(--text-2);
+  line-height: 1.7;
+  text-align: center;
+}

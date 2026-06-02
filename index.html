@@ -21,6 +21,7 @@
   <header class="app-header">
     <h1 class="app-title">일기장</h1>
     <div class="header-right">
+      <span class="sync-indicator" id="sync-indicator" title="동기화 상태"></span>
       <button class="btn-header-write" id="btn-new-entry">+ 일기 쓰기</button>
       <button class="btn-menu" id="btn-menu">☰</button>
     </div>
@@ -35,8 +36,8 @@
     <button class="menu-item" id="menu-export">📤 JSON 내보내기</button>
     <button class="menu-item" id="menu-import">📥 JSON 가져오기</button>
     <hr class="menu-divider">
-    <button class="menu-item menu-disabled">🔄 동기화 (준비 중)</button>
-    <button class="menu-item menu-disabled">🔑 비밀 키 설정 (준비 중)</button>
+    <button class="menu-item" id="menu-sync">🔄 동기화</button>
+    <button class="menu-item" id="menu-secret">🔑 비밀 키 설정</button>
   </div>
   <input type="file" id="import-file-input" accept=".json" hidden>
 
@@ -184,7 +185,30 @@
     </div>
   </div>
 
+  <!-- ── 비밀 키 설정 모달 ── -->
+  <div class="modal-overlay" id="secret-modal" hidden>
+    <div class="modal secret-modal-box">
+      <div class="modal-header">
+        <h2 class="modal-title">동기화 비밀 키</h2>
+        <button class="modal-close-btn" id="secret-modal-close">✕</button>
+      </div>
+      <div class="modal-body secret-modal-body">
+        <p class="secret-modal-desc">다른 기기와 데이터를 동기화하려면<br>비밀 키를 입력하세요.</p>
+        <input type="password" id="secret-input" class="editor-input"
+               placeholder="비밀 키 입력" autocomplete="current-password">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel-action" id="secret-modal-cancel">취소</button>
+        <button class="btn-save-action" id="secret-modal-save">저장 후 동기화</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 토스트 ── -->
+  <div class="toast-container" id="toast-container"></div>
+
   <script src="js/storage.js"></script>
+  <script src="js/sync.js"></script>
   <script src="js/editor.js"></script>
   <script src="js/calendar.js"></script>
   <script src="js/notebooks.js"></script>
