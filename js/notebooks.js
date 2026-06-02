@@ -34,7 +34,7 @@ const Notebooks = {
     grid.innerHTML = '';
 
     if (nbs.length === 0) {
-      grid.innerHTML = '<div class="empty-state">아직 일기장이 없어요.<br>일기장을 만들어 보세요! 📔</div>';
+      grid.innerHTML = '<div class="empty-state"><p>아직 일기장이 없어요.</p><p>일기장을 만들어 보세요! 📔</p></div>';
       return;
     }
 
@@ -70,7 +70,7 @@ const Notebooks = {
     list.innerHTML = '';
 
     if (entries.length === 0) {
-      list.innerHTML = '<div class="empty-state">아직 일기가 없어요.<br>첫 번째 일기를 써보세요! ✏️</div>';
+      list.innerHTML = '<div class="empty-state"><p>아직 일기가 없어요.</p><p>첫 번째 일기를 써보세요! ✏️</p></div>';
       return;
     }
 
