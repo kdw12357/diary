@@ -130,12 +130,13 @@ const Calendar = {
         const maxShow = 2;
 
         cellEntries.slice(0, maxShow).forEach(entry => {
-          const nb  = nbs.find(n => n.id === entry.notebookId);
+          const nb          = nbs.find(n => n.id === entry.notebookId);
+          const displayText = entry.title || nb?.name || '';
           const row = document.createElement('div');
           row.className = 'cal-dot-row';
           row.innerHTML = `
             <span class="dot-circle" style="background:${nb?.color || '#ccc'}"></span>
-            <span class="dot-nb-name">${nb?.name || ''}</span>
+            <span class="dot-nb-name">${displayText}</span>
           `;
           dotsWrap.appendChild(row);
         });

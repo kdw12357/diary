@@ -103,12 +103,15 @@
   <!-- ── 일기 상세 모달 ── -->
   <div class="modal-overlay" id="entry-modal" hidden>
     <div class="modal entry-modal-box">
-      <div class="modal-header">
-        <div class="modal-header-meta">
-          <span class="modal-nb-badge" id="modal-nb-badge"></span>
-          <span class="modal-entry-date" id="modal-entry-date"></span>
+      <div class="modal-header entry-modal-header">
+        <div class="entry-modal-header-top">
+          <div class="modal-header-meta">
+            <span class="modal-nb-badge" id="modal-nb-badge"></span>
+            <span class="modal-entry-date" id="modal-entry-date"></span>
+          </div>
+          <button class="modal-close-btn" id="entry-modal-close">✕</button>
         </div>
-        <button class="modal-close-btn" id="entry-modal-close">✕</button>
+        <div class="modal-entry-title" id="modal-entry-title" hidden></div>
       </div>
       <div class="modal-body" id="entry-modal-body"></div>
       <div class="modal-footer">
@@ -133,6 +136,10 @@
         <div class="editor-field">
           <label class="editor-label">일기장</label>
           <select id="editor-nb-select" class="editor-input editor-select"></select>
+        </div>
+        <div class="editor-field editor-title-field">
+          <label class="editor-label">제목</label>
+          <input type="text" id="editor-title" class="editor-input" placeholder="제목을 입력하세요 (선택)" maxlength="100">
         </div>
       </div>
       <div class="editor-blocks" id="editor-blocks"></div>

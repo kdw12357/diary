@@ -23,6 +23,11 @@ const EntryModal = {
 
     document.getElementById('modal-entry-date').textContent = formatDateKo(entry.date);
 
+    /* 제목 */
+    const titleEl = document.getElementById('modal-entry-title');
+    titleEl.textContent = entry.title || '';
+    titleEl.hidden = !entry.title;
+
     /* 블록 렌더 */
     const body = document.getElementById('entry-modal-body');
     body.innerHTML = '';

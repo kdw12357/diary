@@ -65,11 +65,11 @@ const Storage = {
   _saveEntries(arr) {
     localStorage.setItem(EN_KEY, JSON.stringify(arr));
   },
-  addEntry(notebookId, date, content) {
+  addEntry(notebookId, date, content, title = '') {
     const list = this.getEntries();
     const now = new Date().toISOString();
     /* notebookId가 null이면 미분류로 저장 */
-    const entry = { id: genId(), notebookId: notebookId || null, date, content, createdAt: now, updatedAt: now };
+    const entry = { id: genId(), notebookId: notebookId || null, date, title, content, createdAt: now, updatedAt: now };
     list.push(entry);
     this._saveEntries(list);
     return entry;

@@ -119,7 +119,7 @@ body {
   flex-shrink: 0;
   /* 데스크톱: margin-left:auto 로 오른쪽 끝으로 밀어냄 */
   margin-left: auto;
-  order: 2;
+  order: 3;
 }
 
 .btn-header-write {
@@ -325,15 +325,15 @@ body {
   display: flex;
   align-items: center;
   gap: 3px;
-  font-size: clamp(0.55rem, 1vw, 0.72rem);
+  font-size: clamp(0.7rem, 1.2vw, 0.82rem);
   color: var(--text-2);
   white-space: nowrap;
   overflow: hidden;
 }
 
 .dot-circle {
-  width: 7px;
-  height: 7px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -342,8 +342,8 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 10vw;
-  font-size: clamp(0.55rem, 1vw, 0.75rem);
+  max-width: 12vw;
+  font-size: clamp(0.7rem, 1.2vw, 0.82rem);
 }
 
 .dot-more {
@@ -588,7 +588,28 @@ body {
 /* ══════════════════════════════════════
    일기 상세 모달
 ══════════════════════════════════════ */
-.entry-modal-box { max-width: 560px; }
+.entry-modal-box { max-width: max(700px, 60vw); }
+
+/* 상세 모달 헤더: 배지+날짜 행 + 제목 행 */
+.entry-modal-header {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+.entry-modal-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-entry-title {
+  font-family: var(--font-h);
+  font-size: 1.45rem;
+  color: var(--text-1);
+  font-weight: 700;
+  padding: 8px 2px 2px;
+  line-height: 1.3;
+  word-break: break-word;
+}
 
 .modal-header-meta {
   display: flex;
@@ -620,6 +641,11 @@ body {
   font-family: var(--font-h);
   font-size: 1.15rem;
   color: var(--text-2);
+}
+
+/* 상세 모달 내부 여백 (더 넓어진 폭에 맞게) */
+.entry-modal-box .modal-body {
+  padding: 22px 28px;
 }
 
 /* 일기 본문 블록 */
@@ -687,6 +713,14 @@ body {
 .editor-input:focus { outline: none; border-color: var(--line); }
 
 .editor-select { min-width: 160px; }
+
+/* 제목 필드: 전체 너비로 단독 행 배치 */
+.editor-title-field {
+  flex-basis: 100%;
+}
+.editor-title-field .editor-input {
+  width: 100%;
+}
 
 /* 블록 목록 */
 .editor-blocks {
@@ -1080,6 +1114,9 @@ body {
   /* 행2: 탭이 전체 너비로 내려감 */
   .tab-nav { order: 3; width: 100%; }
 
+  /* 상세 모달: 모바일 95vw */
+  .entry-modal-box { max-width: 95vw; }
+
   .tab-btn { padding: 5px 0; font-size: 0.85rem; flex: 1; text-align: center; }
 
   /* 쓰기 버튼 텍스트 축약 */
@@ -1156,7 +1193,7 @@ details[open] > .entry-group-header::before { transform: rotate(90deg); }
 .cal-cell.holiday.today .cal-day-num { color: #fff; }
 
 .cal-holiday-name {
-  font-size: clamp(0.42rem, 0.75vw, 0.55rem);
+  font-size: clamp(0.7rem, 1.2vw, 0.82rem);
   color: #D46060;
   white-space: nowrap;
   overflow: hidden;

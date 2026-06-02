@@ -19,12 +19,14 @@ const Editor = {
       if (entry) {
         this.blocks = JSON.parse(JSON.stringify(entry.content));
         document.getElementById('editor-date').value = entry.date;
+        document.getElementById('editor-title').value = entry.title || '';
         this._fillNotebookSelect(entry.notebookId);
         document.getElementById('editor-modal-title').textContent = '일기 수정';
       }
     } else {
       this.blocks = [{ type: 'text', value: '' }];
       document.getElementById('editor-date').value = opts.date || getTodayStr();
+      document.getElementById('editor-title').value = '';
       this._fillNotebookSelect(opts.notebookId || null);
       document.getElementById('editor-modal-title').textContent = '일기 쓰기';
     }
@@ -219,8 +221,9 @@ const Editor = {
 
   /* ── 저장 ── */
   save() {
-    const date = document.getElementById('editor-date').value;
-    const nbId = document.getElementById('editor-nb-select').value || null;
+    const date  = document.getElementById('editor-date').value;
+    const nbId  = document.getElementById('editor-nb-select').value || null;
+    const title = document.getElementById('editor-title').value.trim();
 
     if (!date) { alert('날짜를 선택해 주세요.'); return false; }
 
@@ -231,9 +234,9 @@ const Editor = {
     const content = this.blocks.filter(b => b.type === 'image' || b.value !== '');
 
     if (this.editingId) {
-      Storage.updateEntry(this.editingId, { date, notebookId: nbId, content });
+      Storage.updateEntry(this.editingId, { date, notebookId: nbId, title, content });
     } else {
-      Storage.addEntry(nbId, date, content);
+      Storage.addEntry(nbId, date, content, title);
     }
 
     this.close();
