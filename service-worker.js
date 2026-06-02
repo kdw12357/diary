@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diary-v5';
+const CACHE_NAME = 'diary-v6';
 
 const ASSETS = [
   './',
@@ -10,8 +10,8 @@ const ASSETS = [
   './js/notebooks.js',
   './js/app.js',
   './manifest.json',
-  './icons/icon.svg',
-  './icons/icon-maskable.svg',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
 ];
 
 self.addEventListener('install', (e) => {
