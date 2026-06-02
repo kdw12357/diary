@@ -263,8 +263,9 @@ const Calendar = {
 
     if (window.innerWidth > 520) {
       const pw = 270;
-      let left = rect.left + window.scrollX;
-      let top  = rect.bottom + window.scrollY + 5;
+      /* fixed 포지션이므로 getBoundingClientRect() 값을 그대로 사용 (scrollX/Y 불필요) */
+      let left = rect.left;
+      let top  = rect.bottom + 5;
 
       if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
       if (left < 8) left = 8;
@@ -276,7 +277,7 @@ const Calendar = {
       requestAnimationFrame(() => {
         const ph = popup.offsetHeight;
         if (rect.bottom + ph + 5 > window.innerHeight) {
-          popup.style.top = Math.max(4, rect.top + window.scrollY - ph - 5) + 'px';
+          popup.style.top = Math.max(4, rect.top - ph - 5) + 'px';
         }
       });
     } else {
