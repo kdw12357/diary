@@ -66,16 +66,9 @@ body {
   padding: 10px 18px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px 12px;
   box-shadow: 0 2px 8px var(--shadow);
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-width: 0;
 }
 
 .app-title {
@@ -86,8 +79,11 @@ body {
   letter-spacing: 2px;
   white-space: nowrap;
   flex-shrink: 0;
+  /* 데스크톱: 타이틀이 왼쪽 첫 자리 */
+  order: 1;
 }
 
+/* 탭: 데스크톱에서 타이틀 바로 옆, 모바일에서 2행으로 내려감 */
 .tab-nav {
   display: flex;
   gap: 3px;
@@ -95,6 +91,7 @@ body {
   border: 1.5px solid var(--line-light);
   border-radius: 22px;
   padding: 3px;
+  order: 2;
 }
 
 .tab-btn {
@@ -120,6 +117,9 @@ body {
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  /* 데스크톱: margin-left:auto 로 오른쪽 끝으로 밀어냄 */
+  margin-left: auto;
+  order: 2;
 }
 
 .btn-header-write {
@@ -1071,10 +1071,19 @@ body {
    반응형
 ══════════════════════════════════════ */
 @media (max-width: 500px) {
-  .app-header { padding: 9px 12px; }
-  .app-title { font-size: 1.5rem; }
-  .tab-btn { padding: 4px 11px; font-size: 0.83rem; }
-  .btn-header-write { display: none; }
+  .app-header { padding: 8px 12px; gap: 6px 10px; }
+
+  /* 행1: 타이틀(좌) + 버튼들(우) */
+  .app-title { order: 1; font-size: 1.5rem; }
+  .header-right { order: 2; margin-left: auto; }
+
+  /* 행2: 탭이 전체 너비로 내려감 */
+  .tab-nav { order: 3; width: 100%; }
+
+  .tab-btn { padding: 5px 0; font-size: 0.85rem; flex: 1; text-align: center; }
+
+  /* 쓰기 버튼 텍스트 축약 */
+  .btn-header-write { padding: 7px 12px; font-size: 0.8rem; }
 
   .cal-cell { padding: 3px 2px; }
   .dot-nb-name { display: none; }
