@@ -1,0 +1,26 @@
+{
+  "name": "일기장",
+  "short_name": "일기장",
+  "lang": "ko",
+  "description": "나만의 손그림 감성 일기장",
+  "display": "standalone",
+  "orientation": "any",
+  "start_url": "./",
+  "scope": "./",
+  "theme_color": "#FDF8F0",
+  "background_color": "#FDF8F0",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

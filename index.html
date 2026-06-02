@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#FDF8F0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="일기장">
+  <title>일기장</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ── 헤더 ── -->
+  <header class="app-header">
+    <div class="header-left">
+      <h1 class="app-title">일기장</h1>
+      <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="calendar">달력</button>
+        <button class="tab-btn" data-tab="notebooks">일기장</button>
+      </nav>
+    </div>
+    <div class="header-right">
+      <button class="btn-header-write" id="btn-new-entry">+ 일기 쓰기</button>
+      <button class="btn-menu" id="btn-menu">☰</button>
+    </div>
+  </header>
+
+  <!-- ── 메뉴 드롭다운 ── -->
+  <div class="menu-dropdown" id="menu-dropdown" hidden>
+    <button class="menu-item" id="menu-export">📤 JSON 내보내기</button>
+    <button class="menu-item" id="menu-import">📥 JSON 가져오기</button>
+    <hr class="menu-divider">
+    <button class="menu-item menu-disabled">🔄 동기화 (준비 중)</button>
+    <button class="menu-item menu-disabled">🔑 비밀 키 설정 (준비 중)</button>
+  </div>
+  <input type="file" id="import-file-input" accept=".json" hidden>
+
+  <!-- ── 메인 콘텐츠 ── -->
+  <main class="app-main">
+
+    <!-- 달력 탭 -->
+    <section class="tab-section" id="tab-calendar">
+      <div class="calendar-header">
+        <button class="cal-nav-btn" id="cal-prev">◀</button>
+        <div class="cal-title-wrap">
+          <select id="cal-year-select" class="cal-select"></select>
+          <select id="cal-month-select" class="cal-select"></select>
+        </div>
+        <button class="cal-nav-btn" id="cal-next">▶</button>
+      </div>
+      <div class="calendar-weekdays">
+        <div class="weekday sun">일</div>
+        <div class="weekday">월</div>
+        <div class="weekday">화</div>
+        <div class="weekday">수</div>
+        <div class="weekday">목</div>
+        <div class="weekday">금</div>
+        <div class="weekday sat">토</div>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </section>
+
+    <!-- 일기장 탭 -->
+    <section class="tab-section hidden" id="tab-notebooks">
+      <!-- 일기장 목록 -->
+      <div id="notebooks-list-view">
+        <div class="notebooks-grid" id="notebooks-grid"></div>
+        <button class="btn-add-notebook" id="btn-add-notebook">+ 일기장 추가</button>
+      </div>
+      <!-- 일기장별 일기 목록 -->
+      <div id="notebook-entries-view" class="hidden">
+        <div class="entries-header">
+          <button class="btn-back" id="btn-back-notebooks">← 뒤로</button>
+          <h2 class="entries-title" id="entries-nb-title"></h2>
+          <button class="btn-write-sm" id="btn-write-in-nb">+ 쓰기</button>
+        </div>
+        <div class="entries-list" id="entries-list"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── 날짜 팝업 ── -->
+  <div class="date-popup" id="date-popup" hidden>
+    <div class="date-popup-header">
+      <span class="date-popup-label" id="date-popup-label"></span>
+      <button class="popup-close-btn" id="date-popup-close">✕</button>
+    </div>
+    <div class="date-popup-body" id="date-popup-body"></div>
+  </div>
+
+  <!-- ── 일기 상세 모달 ── -->
+  <div class="modal-overlay" id="entry-modal" hidden>
+    <div class="modal entry-modal-box">
+      <div class="modal-header">
+        <div class="modal-header-meta">
+          <span class="modal-nb-badge" id="modal-nb-badge"></span>
+          <span class="modal-entry-date" id="modal-entry-date"></span>
+        </div>
+        <button class="modal-close-btn" id="entry-modal-close">✕</button>
+      </div>
+      <div class="modal-body" id="entry-modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn-edit-action" id="modal-edit-btn">✏️ 수정</button>
+        <button class="btn-delete-action" id="modal-delete-btn">🗑️ 삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 에디터 모달 ── -->
+  <div class="modal-overlay" id="editor-modal" hidden>
+    <div class="modal editor-modal-box">
+      <div class="modal-header">
+        <h2 class="modal-title" id="editor-modal-title">일기 쓰기</h2>
+        <button class="modal-close-btn" id="editor-modal-close">✕</button>
+      </div>
+      <div class="editor-meta">
+        <div class="editor-field">
+          <label class="editor-label">날짜</label>
+          <input type="date" id="editor-date" class="editor-input">
+        </div>
+        <div class="editor-field">
+          <label class="editor-label">일기장</label>
+          <select id="editor-nb-select" class="editor-input editor-select"></select>
+        </div>
+      </div>
+      <div class="editor-blocks" id="editor-blocks"></div>
+      <div class="editor-add-row">
+        <button class="btn-add-block" id="btn-add-text-block">✏️ 글 추가</button>
+        <button class="btn-add-block" id="btn-add-image-block">📷 사진 추가</button>
+        <input type="file" id="image-file-input" accept="image/*" hidden>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel-action" id="editor-cancel">취소</button>
+        <button class="btn-save-action" id="editor-save">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 일기장 추가 모달 ── -->
+  <div class="modal-overlay" id="nb-modal" hidden>
+    <div class="modal nb-modal-box">
+      <div class="modal-header">
+        <h2 class="modal-title">일기장 추가</h2>
+        <button class="modal-close-btn" id="nb-modal-close">✕</button>
+      </div>
+      <div class="modal-body nb-modal-body">
+        <div class="editor-field">
+          <label class="editor-label">이름</label>
+          <input type="text" id="nb-name-input" class="editor-input" placeholder="일기장 이름을 입력하세요" maxlength="30">
+        </div>
+        <div class="editor-field">
+          <label class="editor-label">색상</label>
+          <div class="color-palette" id="color-palette"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel-action" id="nb-modal-cancel">취소</button>
+        <button class="btn-save-action" id="nb-modal-save">만들기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 삭제 확인 모달 ── -->
+  <div class="modal-overlay" id="confirm-modal" hidden>
+    <div class="modal confirm-modal-box">
+      <div class="modal-body">
+        <p class="confirm-msg" id="confirm-msg">정말 삭제할까요?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel-action" id="confirm-cancel">취소</button>
+        <button class="btn-delete-action" id="confirm-ok">삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/notebooks.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
