@@ -47,6 +47,7 @@ body {
 
 /* ── 유틸 ── */
 .hidden { display: none !important; }
+[hidden] { display: none !important; }
 
 /* ── 스크롤바 ── */
 ::-webkit-scrollbar { width: 5px; }
