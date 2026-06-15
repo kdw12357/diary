@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diary-v102';
+const CACHE_NAME = 'diary-v103';
 
 const ASSETS = [
   './',
@@ -9,6 +9,7 @@ const ASSETS = [
   './js/editor.js',
   './js/calendar.js',
   './js/notebooks.js',
+  './js/search.js',
   './js/app.js',
   './manifest.json',
   './icons/icon-192.png',

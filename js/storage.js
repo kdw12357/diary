@@ -68,8 +68,9 @@ const Storage = {
   addEntry(notebookId, date, content, title = '') {
     const list = this.getEntries();
     const now = new Date().toISOString();
+    const tags = this.extractTags(content);
     /* notebookId가 null이면 미분류로 저장 */
-    const entry = { id: genId(), notebookId: notebookId || null, date, title, content, createdAt: now, updatedAt: now };
+    const entry = { id: genId(), notebookId: notebookId || null, date, title, content, tags, createdAt: now, updatedAt: now };
     list.push(entry);
     this._saveEntries(list);
     return entry;
@@ -78,7 +79,9 @@ const Storage = {
     const list = this.getEntries();
     const idx = list.findIndex(e => e.id === id);
     if (idx === -1) return null;
-    list[idx] = { ...list[idx], ...patch, updatedAt: new Date().toISOString() };
+    const updated = { ...list[idx], ...patch, updatedAt: new Date().toISOString() };
+    if (patch.content) updated.tags = this.extractTags(patch.content);
+    list[idx] = updated;
     this._saveEntries(list);
     return list[idx];
   },
@@ -103,6 +106,51 @@ const Storage = {
   },
   hasUnclassified() {
     return this.getEntries().some(e => e.notebookId === null);
+  },
+
+  /* ── 태그 ── */
+  extractTags(content) {
+    const tags = new Set();
+    for (const block of content) {
+      if (block.type !== 'text') continue;
+      for (const m of block.value.matchAll(/#([가-힣a-zA-Z0-9_]+)/g)) {
+        tags.add(m[1]);
+      }
+    }
+    return [...tags];
+  },
+
+  getAllTags() {
+    const counts = {};
+    for (const entry of this.getEntries()) {
+      for (const tag of (entry.tags || [])) {
+        counts[tag] = (counts[tag] || 0) + 1;
+      }
+    }
+    return Object.entries(counts)
+      .map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  },
+
+  searchEntries(query, notebookId) {
+    if (!query.trim()) return [];
+    const q = query.trim();
+    const isTagSearch = q.startsWith('#');
+    const tagQ  = isTagSearch ? q.slice(1).toLowerCase() : '';
+    const textQ = isTagSearch ? '' : q.toLowerCase();
+
+    return this.getEntries()
+      .filter(entry => {
+        if (notebookId && entry.notebookId !== notebookId) return false;
+        if (isTagSearch) {
+          return tagQ.length > 0 && (entry.tags || []).some(t => t.toLowerCase() === tagQ);
+        }
+        return (entry.title || '').toLowerCase().includes(textQ)
+          || (entry.tags || []).some(t => t.toLowerCase().includes(textQ))
+          || entry.content.some(b => b.type === 'text' && b.value.toLowerCase().includes(textQ));
+      })
+      .sort((a, b) => b.date.localeCompare(a.date));
   },
 
   /* ── Export / Import ── */

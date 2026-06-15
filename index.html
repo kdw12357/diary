@@ -22,6 +22,7 @@
     <h1 class="app-title">일기장</h1>
     <div class="header-right">
       <span class="sync-indicator" id="sync-indicator" title="동기화 상태"></span>
+      <button class="btn-search" id="btn-search" title="검색">🔍</button>
       <button class="btn-header-write" id="btn-new-entry">+ 일기 쓰기</button>
       <button class="btn-menu" id="btn-menu">☰</button>
     </div>
@@ -112,6 +113,7 @@
           <button class="modal-close-btn" id="entry-modal-close">✕</button>
         </div>
         <div class="modal-entry-title" id="modal-entry-title" hidden></div>
+        <div class="entry-tag-chips" id="modal-entry-tags" hidden></div>
       </div>
       <div class="modal-body" id="entry-modal-body"></div>
       <div class="modal-footer">
@@ -211,6 +213,30 @@
     </div>
   </div>
 
+  <!-- ── 검색 모달 ── -->
+  <div class="modal-overlay" id="search-modal" hidden>
+    <div class="modal search-modal-box">
+      <div class="search-modal-header">
+        <div class="search-input-wrap">
+          <span class="search-input-icon">🔍</span>
+          <input type="search" id="search-input" placeholder="제목, 내용, #태그 검색…"
+                 autocomplete="off" inputmode="search">
+        </div>
+        <button class="modal-close-btn" id="search-close">✕</button>
+      </div>
+      <div class="search-filter-row">
+        <select id="search-nb-filter" class="editor-input search-nb-select"></select>
+      </div>
+      <div class="search-body">
+        <div id="search-tags-section" class="search-tags-section" hidden>
+          <div class="search-section-label">자주 쓴 태그</div>
+          <div class="search-frequent-tags" id="search-frequent-tags"></div>
+        </div>
+        <div id="search-results"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── 토스트 ── -->
   <div class="toast-container" id="toast-container"></div>
 
@@ -219,6 +245,7 @@
   <script src="js/editor.js"></script>
   <script src="js/calendar.js"></script>
   <script src="js/notebooks.js"></script>
+  <script src="js/search.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

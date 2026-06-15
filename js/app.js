@@ -2,6 +2,25 @@
    app.js  —  앱 진입점, 전역 모달, 라우팅
 ────────────────────────────────────── */
 
+/* 본문 텍스트에서 #태그를 강조 span으로 변환 (XSS 안전) */
+function renderTextWithTags(text, onTagClick) {
+  const frag = document.createDocumentFragment();
+  const re = /#([가-힣a-zA-Z0-9_]+)/g;
+  let last = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+    const span = document.createElement('span');
+    span.className = 'tag-highlight';
+    span.textContent = m[0];
+    const tag = m[1];
+    span.addEventListener('click', e => { e.stopPropagation(); onTagClick(tag); });
+    frag.appendChild(span);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+  return frag;
+}
+
 /* ══════════════════════
    일기 상세 모달
 ══════════════════════ */
@@ -28,6 +47,26 @@ const EntryModal = {
     titleEl.textContent = entry.title || '';
     titleEl.hidden = !entry.title;
 
+    /* 태그 칩 */
+    const tagsEl = document.getElementById('modal-entry-tags');
+    const tags = entry.tags || [];
+    tagsEl.innerHTML = '';
+    if (tags.length > 0) {
+      tags.forEach(tag => {
+        const chip = document.createElement('button');
+        chip.className = 'tag-chip';
+        chip.textContent = '#' + tag;
+        chip.addEventListener('click', () => {
+          EntryModal.close();
+          Search.openWithTag(tag);
+        });
+        tagsEl.appendChild(chip);
+      });
+      tagsEl.hidden = false;
+    } else {
+      tagsEl.hidden = true;
+    }
+
     /* 블록 렌더 */
     const body = document.getElementById('entry-modal-body');
     body.innerHTML = '';
@@ -37,7 +76,10 @@ const EntryModal = {
       const div = document.createElement('div');
       if (block.type === 'text') {
         div.className = 'entry-text-block';
-        div.textContent = block.value;
+        div.appendChild(renderTextWithTags(block.value, tag => {
+          EntryModal.close();
+          Search.openWithTag(tag);
+        }));
       } else if (block.type === 'image') {
         div.className = 'entry-image-block';
         const img = document.createElement('img');
@@ -134,6 +176,12 @@ const App = {
     /* 헤더 쓰기 버튼 */
     document.getElementById('btn-new-entry').addEventListener('click', () => Editor.open({}));
 
+    /* 헤더 검색 버튼 */
+    document.getElementById('btn-search').addEventListener('click', () => {
+      dropdown.hidden = true;
+      Search.open();
+    });
+
     /* ☰ 메뉴 */
     const menuBtn  = document.getElementById('btn-menu');
     const dropdown = document.getElementById('menu-dropdown');
@@ -221,6 +269,7 @@ const App = {
       if (!document.getElementById('secret-modal').hidden)   { SecretModal.close(); return; }
       if (!document.getElementById('editor-modal').hidden)   { Editor.close(); return; }
       if (!document.getElementById('entry-modal').hidden)    { EntryModal.close(); return; }
+      if (!document.getElementById('search-modal').hidden)   { Search.close(); return; }
       if (!document.getElementById('nb-modal').hidden)       { Notebooks._closeModal(); return; }
       if (!document.getElementById('date-popup').hidden)     { document.getElementById('date-popup').hidden = true; }
     });
@@ -228,6 +277,7 @@ const App = {
     /* 모듈 초기화 */
     Calendar.init();
     Notebooks.init();
+    Search.init();
 
     /* Service Worker 등록 */
     if ('serviceWorker' in navigator) {
