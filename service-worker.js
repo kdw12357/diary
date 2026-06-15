@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diary-v103';
+const CACHE_NAME = 'diary-v104';
 
 const ASSETS = [
   './',

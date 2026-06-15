@@ -1357,6 +1357,7 @@ details[open] > .entry-group-header::before { transform: rotate(90deg); }
   display: flex;
   align-items: center;
   flex: 1;
+  min-width: 0;
   background: var(--bg);
   border: 1.5px solid var(--line-light);
   border-radius: var(--radius-md);
@@ -1487,7 +1488,8 @@ details[open] > .entry-group-header::before { transform: rotate(90deg); }
 
 @media (max-width: 500px) {
   .search-modal-box { max-width: 100%; }
-  .search-modal-header { padding: 10px 12px; }
+  .search-modal-header { padding: 10px 12px; gap: 6px; }
+  .search-modal-header .modal-close-btn { flex-shrink: 0; padding: 4px 6px; }
   .search-body { padding: 12px; }
   .search-filter-row { padding: 8px 12px; }
 }
