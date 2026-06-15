@@ -162,6 +162,14 @@ const Editor = {
     ta.style.height = 'auto';
     ta.style.height = ta.scrollHeight + 'px';
     container.scrollTop = savedScrollTop;
+    // 모바일 브라우저는 레이아웃 후 비동기로 scrollTop을 덮어씀.
+    // scroll 이벤트로 직접 가로채고 rAF에서도 복원.
+    const restore = () => { container.scrollTop = savedScrollTop; };
+    container.addEventListener('scroll', restore, { once: true });
+    requestAnimationFrame(() => {
+      container.removeEventListener('scroll', restore);
+      container.scrollTop = savedScrollTop;
+    });
   },
 
   _move(idx, dir) {
