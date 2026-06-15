@@ -153,10 +153,15 @@ const Editor = {
   },
 
   _autoResize(ta) {
-    const scrollY = window.scrollY;
+    if (ta.scrollHeight > ta.clientHeight) {
+      ta.style.height = ta.scrollHeight + 'px';
+      return;
+    }
+    const container = document.getElementById('editor-blocks');
+    const savedScrollTop = container.scrollTop;
     ta.style.height = 'auto';
     ta.style.height = ta.scrollHeight + 'px';
-    window.scrollTo({ top: scrollY, behavior: 'instant' });
+    container.scrollTop = savedScrollTop;
   },
 
   _move(idx, dir) {
