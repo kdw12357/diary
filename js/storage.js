@@ -86,7 +86,11 @@ const Storage = {
     return list[idx];
   },
   deleteEntry(id) {
-    this._saveEntries(this.getEntries().filter(e => e.id !== id));
+    const list   = this.getEntries();
+    const target = list.find(e => e.id === id);
+    this._saveEntries(list.filter(e => e.id !== id));
+    /* 삭제된 일기가 쓰던 이미지 정리 (다른 일기가 참조 중이면 남김) */
+    if (target) this.releaseImages(this.imageIdsOf(target.content));
   },
   getEntryById(id) {
     return this.getEntries().find(e => e.id === id) || null;
@@ -106,6 +110,30 @@ const Storage = {
   },
   hasUnclassified() {
     return this.getEntries().some(e => e.notebookId === null);
+  },
+
+  /* ── 이미지 참조 관리 ── */
+  imageIdsOf(content) {
+    return (content || [])
+      .filter(b => b && b.type === 'image' && b.imageId)
+      .map(b => b.imageId);
+  },
+
+  /* 모든 일기가 참조 중인 imageId 집합 */
+  getReferencedImageIds() {
+    const set = new Set();
+    for (const e of this.getEntries()) this.imageIdsOf(e.content).forEach(id => set.add(id));
+    return set;
+  },
+
+  /* ids 중 어떤 일기에서도 참조하지 않는 이미지를 IndexedDB 에서 삭제 (fire-and-forget) */
+  releaseImages(ids) {
+    const uniq = [...new Set(ids)];
+    if (!uniq.length) return Promise.resolve();
+    const used = this.getReferencedImageIds();
+    const orphan = uniq.filter(id => !used.has(id));
+    if (!orphan.length) return Promise.resolve();
+    return ImageDB.deleteImages(orphan).catch(() => { /* 실패해도 "저장공간 정리"가 회수 */ });
   },
 
   /* ── 태그 ── */

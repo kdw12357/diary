@@ -37,8 +37,13 @@
     <button class="menu-item" id="menu-export">📤 JSON 내보내기</button>
     <button class="menu-item" id="menu-import">📥 JSON 가져오기</button>
     <hr class="menu-divider">
+    <button class="menu-item" id="menu-images">🖼️ 이미지 백업/복원</button>
+    <button class="menu-item" id="menu-cleanup">🧹 저장공간 정리</button>
+    <hr class="menu-divider">
     <button class="menu-item" id="menu-sync">🔄 동기화</button>
     <button class="menu-item" id="menu-secret">🔑 비밀 키 설정</button>
+    <hr class="menu-divider">
+    <div class="menu-usage" id="menu-usage"></div>
   </div>
   <input type="file" id="import-file-input" accept=".json" hidden>
 
@@ -237,11 +242,44 @@
     </div>
   </div>
 
+  <!-- ── 이미지 백업/복원 모달 ── -->
+  <div class="modal-overlay" id="image-backup-modal" hidden>
+    <div class="modal image-backup-box">
+      <div class="modal-header">
+        <h2 class="modal-title">이미지 백업/복원</h2>
+        <button class="modal-close-btn" id="image-backup-close">✕</button>
+      </div>
+      <div class="modal-body image-backup-body">
+        <p class="image-backup-desc">
+          사진은 이 기기에만 저장돼요.<br>
+          다른 기기에서 보려면 백업 파일을 만들어 그 기기에서 복원하세요.
+        </p>
+        <button class="btn-save-action image-backup-btn" id="image-backup-run">📤 이미지 백업 (JSON 파일)</button>
+        <button class="btn-cancel-action image-backup-btn" id="image-restore-run">📥 백업 파일에서 복원</button>
+        <p class="image-backup-note">이미지가 많으면 파일이 커질 수 있어요. 이미 있는 이미지는 덮어쓰지 않고 건너뛰어요.</p>
+        <input type="file" id="image-restore-input" accept=".json,application/json" hidden>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 마이그레이션 진행 표시 ── -->
+  <div class="migrate-overlay" id="migrate-overlay" hidden>
+    <div class="migrate-box">
+      <div class="migrate-icon">🖍️</div>
+      <p class="migrate-text" id="migrate-text">저장공간 정리 중...</p>
+      <div class="migrate-bar"><div class="migrate-bar-fill" id="migrate-bar-fill"></div></div>
+      <p class="migrate-note">사진을 새 저장소로 옮기고 있어요.<br>창을 닫지 말고 잠시만 기다려 주세요.</p>
+    </div>
+  </div>
+
   <!-- ── 토스트 ── -->
   <div class="toast-container" id="toast-container"></div>
 
+  <script src="js/imagedb.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/sync.js"></script>
+  <script src="js/migrate.js"></script>
+  <script src="js/imagetools.js"></script>
   <script src="js/editor.js"></script>
   <script src="js/calendar.js"></script>
   <script src="js/notebooks.js"></script>

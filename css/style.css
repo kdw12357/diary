@@ -1493,3 +1493,98 @@ details[open] > .entry-group-header::before { transform: rotate(90deg); }
   .search-body { padding: 12px; }
   .search-filter-row { padding: 8px 12px; }
 }
+
+/* ══════════════════════════════════════
+   이미지 저장소 (IndexedDB) 관련
+══════════════════════════════════════ */
+
+/* 이미지 없음 플레이스홀더 */
+.img-missing {
+  max-width: 100%;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 12px;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card2);
+  color: var(--text-3);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* ☰ 메뉴 하단 저장공간 표시 */
+.menu-usage {
+  padding: 8px 18px 10px;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--text-3);
+  max-width: 260px;
+}
+.menu-usage:empty { display: none; }
+
+/* 이미지 백업/복원 모달 */
+.image-backup-box { max-width: 380px; }
+.image-backup-body { display: flex; flex-direction: column; gap: 12px; }
+.image-backup-desc {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.image-backup-btn { width: 100%; padding: 12px; }
+.image-backup-note {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+
+/* 마이그레이션 진행 오버레이 */
+.migrate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(253, 248, 240, 0.94);
+  backdrop-filter: blur(3px);
+}
+.migrate-box {
+  width: 100%;
+  max-width: 320px;
+  padding: 28px 24px;
+  text-align: center;
+  background: var(--bg-card);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 6px 24px var(--shadow-md);
+}
+.migrate-icon { font-size: 2rem; margin-bottom: 8px; }
+.migrate-text {
+  font-family: var(--font-h);
+  font-size: 1.3rem;
+  color: var(--text-1);
+  margin-bottom: 14px;
+}
+.migrate-bar {
+  height: 10px;
+  border-radius: 6px;
+  background: var(--line-faint);
+  border: 1px solid var(--line-light);
+  overflow: hidden;
+}
+.migrate-bar-fill {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  border-radius: 6px;
+  transition: width 0.2s ease;
+}
+.migrate-note {
+  margin-top: 14px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-3);
+}

@@ -1,5 +1,5 @@
 /* ──────────────────────────────────────
-   editor.js  —  블록 에디터 + 이미지 압축
+   editor.js  —  블록 에디터 + 이미지 압축(→ IndexedDB)
 ────────────────────────────────────── */
 
 const IMG_SIZE_MAP = { small: '33%', medium: '66%', large: '100%' };
@@ -8,16 +8,21 @@ const IMG_SIZE_LABEL = { small: '소', medium: '중', large: '대' };
 const Editor = {
   blocks: [],
   editingId: null,
+  originalImageIds: [],   /* 수정 시작 시점에 이 일기가 참조하던 이미지 */
+  newImageIds: [],        /* 이 편집 세션에서 새로 업로드한 이미지 */
 
   /* ── 열기 ── */
   open(opts = {}) {
     this.blocks = [];
     this.editingId = opts.entryId || null;
+    this.originalImageIds = [];
+    this.newImageIds = [];
 
     if (opts.entryId) {
       const entry = Storage.getEntryById(opts.entryId);
       if (entry) {
         this.blocks = JSON.parse(JSON.stringify(entry.content));
+        this.originalImageIds = Storage.imageIdsOf(entry.content);
         document.getElementById('editor-date').value = entry.date;
         document.getElementById('editor-title').value = entry.title || '';
         this._fillNotebookSelect(entry.notebookId);
@@ -41,8 +46,14 @@ const Editor = {
 
   close() {
     document.getElementById('editor-modal').hidden = true;
+    /* 이번 세션에서 올렸지만 어떤 일기도 참조하지 않게 된 이미지 정리
+       (저장된 경우엔 일기가 참조 중이므로 releaseImages 가 남겨 둔다) */
+    Storage.releaseImages(this.newImageIds);
+    ImageURL.reset('editor');
     this.blocks = [];
     this.editingId = null;
+    this.originalImageIds = [];
+    this.newImageIds = [];
   },
 
   /* ── 일기장 드롭다운 ── */
@@ -71,6 +82,7 @@ const Editor = {
   _render() {
     const container = document.getElementById('editor-blocks');
     container.innerHTML = '';
+    ImageURL.reset('editor');
 
     this.blocks.forEach((block, idx) => {
       const item = document.createElement('div');
@@ -106,12 +118,9 @@ const Editor = {
         const wrap = document.createElement('div');
         wrap.className = 'block-img-wrap';
 
-        if (block.value) {
+        if (block.imageId || block.value) {
           const currentSize = block.size || 'medium';
-          const img = document.createElement('img');
-          img.src = block.value;
-          img.style.width = IMG_SIZE_MAP[currentSize];
-          wrap.appendChild(img);
+          wrap.appendChild(mountImage(block, 'editor', { width: IMG_SIZE_MAP[currentSize] }));
 
           /* [소] [중] [대] 버튼 */
           const sizeBtns = document.createElement('div');
@@ -199,38 +208,55 @@ const Editor = {
     }, 60);
   },
 
-  addImage(file) {
-    const idx = this.blocks.length;
-    this.blocks.push({ type: 'image', value: null, size: 'medium' });
+  /* 파일 → Canvas 압축 → Blob → IndexedDB 저장 → 블록에는 imageId 만 기록 */
+  async addImage(file) {
+    /* 처리 중 블록을 이동/삭제해도 안전하도록 인덱스가 아닌 객체 참조로 추적 */
+    const block = { type: 'image', imageId: null, size: 'medium' };
+    this.blocks.push(block);
     this._render();
-    this._compress(file).then(dataUrl => {
-      this.blocks[idx].value = dataUrl;
+    try {
+      const blob = await this._compress(file);
+      const id   = await ImageDB.saveImage(blob);
+      this.newImageIds.push(id);
+      if (!this.blocks.includes(block)) {       /* 처리 중 에디터에서 삭제/닫힘 */
+        Storage.releaseImages([id]);
+        return;
+      }
+      block.imageId = id;
       this._render();
-    });
+    } catch (err) {
+      console.error('[image]', err);
+      const i = this.blocks.indexOf(block);
+      if (i !== -1) this.blocks.splice(i, 1);
+      if (!document.getElementById('editor-modal').hidden) this._render();
+      Toast.show('사진을 저장하지 못했어요', 'error');
+    }
   },
 
-  /* ── Canvas API 이미지 압축 ── */
+  /* ── Canvas API 이미지 압축 (최대 1000px, JPEG 0.65) → Blob ── */
   _compress(file) {
-    return new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = new Image();
-        img.onload = () => {
-          const MAX = 1200;
-          let w = img.width, h = img.height;
-          if (w > MAX || h > MAX) {
-            if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
-            else        { w = Math.round(w * MAX / h); h = MAX; }
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', 0.7));
-        };
-        img.src = e.target.result;
+    return new Promise((resolve, reject) => {
+      const src = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(src);
+        const MAX = 1000;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
+          else        { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(
+          b => (b ? resolve(b) : reject(new Error('이미지 압축 실패'))),
+          'image/jpeg', 0.65
+        );
       };
-      reader.readAsDataURL(file);
+      img.onerror = () => { URL.revokeObjectURL(src); reject(new Error('이미지 로드 실패')); };
+      img.src = src;
     });
   },
 
@@ -242,7 +268,7 @@ const Editor = {
 
     if (!date) { alert('날짜를 선택해 주세요.'); return false; }
 
-    if (this.blocks.some(b => b.type === 'image' && b.value === null)) {
+    if (this.blocks.some(b => b.type === 'image' && !b.imageId && !b.value)) {
       alert('사진을 처리 중입니다. 잠시 후 다시 시도해 주세요.'); return false;
     }
 
@@ -253,6 +279,11 @@ const Editor = {
     } else {
       Storage.addEntry(nbId, date, content, title);
     }
+
+    /* 편집 중 삭제된 이미지 정리: (원래 참조 + 새로 올림) − 최종 content.
+       다른 일기가 참조 중인 이미지는 releaseImages 가 남겨 둔다 */
+    const kept = new Set(Storage.imageIdsOf(content));
+    Storage.releaseImages([...this.originalImageIds, ...this.newImageIds].filter(id => !kept.has(id)));
 
     this.close();
     App.refresh();

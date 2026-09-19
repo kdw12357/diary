@@ -99,6 +99,7 @@ const Notebooks = {
     const entries = Storage.getEntriesByNotebook(nbId);
     const color   = nb?.color || '#aaa';
     list.innerHTML = '';
+    ImageURL.reset('list');
 
     if (entries.length === 0) {
       list.innerHTML = '<div class="empty-state"><p>아직 일기가 없어요.</p><p>첫 번째 일기를 써보세요! ✏️</p></div>';
@@ -145,7 +146,7 @@ const Notebooks = {
 
         monthEntries.forEach(entry => {
           const preview = entry.content.find(b => b.type === 'text')?.value || '';
-          const thumb   = entry.content.find(b => b.type === 'image')?.value;
+          const thumb   = entry.content.find(b => b.type === 'image');
 
           const item = document.createElement('div');
           item.className = 'entry-list-item';
@@ -157,8 +158,10 @@ const Notebooks = {
                 this._esc(preview.slice(0, 50)) || (thumb ? '📷 사진' : '(내용 없음)')
               }</div>
             </div>
-            ${thumb ? `<img class="entry-list-thumb" src="${thumb}" alt="">` : ''}
           `;
+          if (thumb) {
+            item.appendChild(mountImage(thumb, 'list', { cls: 'entry-list-thumb', lazy: true, onMissing: 'remove' }));
+          }
           item.addEventListener('click', () => EntryModal.open(entry.id));
           monthDet.appendChild(item);
         });

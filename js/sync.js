@@ -64,6 +64,8 @@ const Sync = {
           notebooks: Array.isArray(diary.notebooks) ? diary.notebooks : [],
           entries:   Array.isArray(diary.entries)   ? diary.entries   : [],
         });
+        /* 서버에 구버전(base64) 데이터가 있었다면 다시 IndexedDB 로 변환 */
+        await Migrate.run({ force: true });
         App.refresh();
       }
 
@@ -87,6 +89,8 @@ const Sync = {
     if (this._isPulling) return;           /* pull 중 재진입 방지 */
     const secret = this.getSecret();
     if (!secret) return;
+    /* 이미지 변환 중이거나 base64 가 남아 있으면 전송하지 않음 (변환 완료 후 다음 저장 때 전송) */
+    if (Migrate.running || Migrate.hasLegacy()) return;
 
     this._status('syncing');
     try {
@@ -99,7 +103,7 @@ const Sync = {
         body: JSON.stringify({
           diary: {
             notebooks: Storage.getNotebooks(),
-            entries:   Storage.getEntries(),
+            entries:   Storage.getEntries(),   /* 이미지 블록은 imageId 만 포함 */
           },
         }),
       });

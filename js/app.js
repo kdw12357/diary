@@ -68,6 +68,7 @@ const EntryModal = {
     }
 
     /* 블록 렌더 */
+    ImageURL.reset('entry');
     const body = document.getElementById('entry-modal-body');
     body.innerHTML = '';
     const wrap = document.createElement('div');
@@ -82,12 +83,7 @@ const EntryModal = {
         }));
       } else if (block.type === 'image') {
         div.className = 'entry-image-block';
-        const img = document.createElement('img');
-        img.src = block.value;
-        img.loading = 'lazy';
-        const sizeMap = { small: '33%', medium: '66%', large: '100%' };
-        img.style.width = sizeMap[block.size || 'medium'];
-        div.appendChild(img);
+        div.appendChild(mountImage(block, 'entry', { width: IMG_SIZE_MAP[block.size || 'medium'] }));
       }
       wrap.appendChild(div);
     });
@@ -98,6 +94,7 @@ const EntryModal = {
 
   close() {
     document.getElementById('entry-modal').hidden = true;
+    ImageURL.reset('entry');
     this.id = null;
   },
 
@@ -188,6 +185,7 @@ const App = {
     menuBtn.addEventListener('click', e => {
       e.stopPropagation();
       dropdown.hidden = !dropdown.hidden;
+      if (!dropdown.hidden) ImageTools.updateUsage();
     });
     document.addEventListener('click', () => { dropdown.hidden = true; });
 
@@ -200,6 +198,14 @@ const App = {
       const f = e.target.files[0];
       if (f) this.importJSON(f);
       e.target.value = '';
+    });
+    document.getElementById('menu-images').addEventListener('click', () => {
+      dropdown.hidden = true;
+      ImageTools.openModal();
+    });
+    document.getElementById('menu-cleanup').addEventListener('click', () => {
+      dropdown.hidden = true;
+      ImageTools.cleanup();
     });
     document.getElementById('menu-sync').addEventListener('click', () => {
       dropdown.hidden = true;
@@ -251,6 +257,21 @@ const App = {
       if (e.target === document.getElementById('confirm-modal')) Confirm.close();
     });
 
+    /* 이미지 백업/복원 모달 */
+    document.getElementById('image-backup-close').addEventListener('click', () => ImageTools.closeModal());
+    document.getElementById('image-backup-run').addEventListener('click',   () => ImageTools.backup());
+    document.getElementById('image-restore-run').addEventListener('click',  () => {
+      document.getElementById('image-restore-input').click();
+    });
+    document.getElementById('image-restore-input').addEventListener('change', e => {
+      const f = e.target.files[0];
+      if (f) ImageTools.restore(f);
+      e.target.value = '';
+    });
+    document.getElementById('image-backup-modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('image-backup-modal')) ImageTools.closeModal();
+    });
+
     /* 비밀 키 모달 */
     document.getElementById('secret-modal-close').addEventListener('click',  () => SecretModal.close());
     document.getElementById('secret-modal-cancel').addEventListener('click', () => SecretModal.close());
@@ -267,6 +288,7 @@ const App = {
       if (e.key !== 'Escape') return;
       if (!document.getElementById('confirm-modal').hidden)  { Confirm.close(); return; }
       if (!document.getElementById('secret-modal').hidden)   { SecretModal.close(); return; }
+      if (!document.getElementById('image-backup-modal').hidden) { ImageTools.closeModal(); return; }
       if (!document.getElementById('editor-modal').hidden)   { Editor.close(); return; }
       if (!document.getElementById('entry-modal').hidden)    { EntryModal.close(); return; }
       if (!document.getElementById('search-modal').hidden)   { Search.close(); return; }
@@ -284,7 +306,18 @@ const App = {
       navigator.serviceWorker.register('./service-worker.js').catch(() => {});
     }
 
-    /* 동기화 초기화 (캐시 우선 → 백그라운드 pull) */
+    this._startup();
+  },
+
+  /* 시작 순서: 구버전 이미지 마이그레이션 → (필요 시 화면 갱신) → 동기화
+     마이그레이션이 끝나기 전에는 pull/push 가 base64 를 주고받지 않도록 한다 */
+  async _startup() {
+    try {
+      const r = await Migrate.run();
+      if (r.status === 'migrated') { Calendar.render(); Notebooks.refresh(); }
+    } catch (err) {
+      console.error('[startup]', err);
+    }
     Sync.init();
   },
 
@@ -323,6 +356,7 @@ const App = {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    Toast.show('텍스트만 백업돼요. 사진은 ☰ 이미지 백업/복원을 이용하세요');
   },
 
   /* ── JSON 가져오기 ── */
@@ -333,8 +367,11 @@ const App = {
         const data = JSON.parse(e.target.result);
         Confirm.open(
           '기존 데이터를 모두 덮어씁니다.\n계속할까요?',
-          () => {
-            Storage.importAll(data);
+          async () => {
+            try { Storage.importAll(data); }
+            catch { alert('저장 공간이 부족해 가져오지 못했어요.'); return; }
+            /* 구버전 JSON(base64 이미지 포함)이면 IndexedDB 로 변환 */
+            await Migrate.run({ force: true });
             this.refresh();
             alert('가져오기 완료!');
           }
